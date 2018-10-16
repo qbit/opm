@@ -42,6 +42,11 @@ opm_err()
 	echo "${1}" 1>&2 && return ${2:-1}
 }
 
+opm_warn()
+{
+	echo "===> ${1}" 1>&2
+}
+
 usage()
 {
 	cat << USAGE
@@ -200,6 +205,8 @@ show_entry()
 	local _parent="${_path%/*}"
 	[ -z ${_path} ] && opm_err "Empty path" 
 	[ -f ${OPM_STORE}/${_path} ] || opm_err "Non-existent entry" 
+	openssl x509 -checkend 2592000 -in ${_PUBLIC_KEY} > /dev/null || \
+		opm_warn "Key will expire in <= 30 days!"
 	signify -Vq -p ${_SPUBLIC_KEY} -m ${OPM_STORE}/${_path} && \
 	_e=$(openssl smime -decrypt -in ${OPM_STORE}/${_path} -inform PEM \
 		-inkey ${_PRIVATE_KEY})
